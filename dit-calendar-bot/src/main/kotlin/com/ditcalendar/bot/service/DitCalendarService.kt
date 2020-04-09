@@ -1,6 +1,9 @@
 package com.ditcalendar.bot.service
 
-import com.ditcalendar.bot.data.*
+import com.ditcalendar.bot.data.DitCalendar
+import com.ditcalendar.bot.data.TaskAfterUnassignment
+import com.ditcalendar.bot.data.TaskForUnassignment
+import com.ditcalendar.bot.data.TelegramLink
 import com.ditcalendar.bot.data.core.Base
 import com.ditcalendar.bot.endpoint.AuthEndpoint
 import com.ditcalendar.bot.endpoint.CalendarEndpoint
@@ -10,23 +13,24 @@ import com.ditcalendar.bot.error.UnassigmentError
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.flatMap
 import com.github.kittinunf.result.map
+import javax.enterprise.context.ApplicationScoped
 
-class DitCalendarService {
+@ApplicationScoped
+class DitCalendarService(private val calendarEndpoint: CalendarEndpoint,
+                         private val taskEndpoint: TaskEndpoint,
+                         private val authEndpoint: AuthEndpoint) {
 
-    private val calendarEndpoint = CalendarEndpoint()
-    private val taskEndpoint = TaskEndpoint()
-    private val authEndpoint = AuthEndpoint()
-
-    fun executeCallback(telegramLink: TelegramLink, callbackRequest: CallbackRequest?): Result<Base, Exception> =
-            when (callbackRequest) {
-                is UnassignCallbackRequest -> unassignUserFromTask(callbackRequest.taskId, telegramLink)
-                is ReloadCallbackRequest -> getCalendarAndTask(callbackRequest.calendarId)
-                null -> Result.error(InvalidRequest())
-            }
+    fun executeUnassignCallback(telegramLink: TelegramLink, opts: String): Result<TaskAfterUnassignment, Exception> {
+        val taskId: Long? = opts.toLongOrNull()
+        return if (taskId != null)
+            unassignUserFromTask(taskId, telegramLink)
+        else
+            Result.error(InvalidRequest())
+    }
 
 
     fun executeTaskAssignmentCommand(telegramLink: TelegramLink, opts: String): Result<Base, Exception> {
-        val taskId: Long? = opts.substringAfter("_").toLongOrNull()
+        val taskId: Long? = opts.toLongOrNull()
         return if (taskId != null)
             assignUserToTask(taskId, telegramLink)
         else

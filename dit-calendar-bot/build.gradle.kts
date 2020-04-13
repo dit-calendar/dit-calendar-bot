@@ -27,7 +27,7 @@ dependencies {
     val kotlinxSerializationVersion = "0.20.0"
     val camelQuarkusVersion = "1.0.0-M6"
 
-    implementation(kotlin("reflect"))
+    compileOnly(kotlin("reflect"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$kotlinxSerializationVersion")
 

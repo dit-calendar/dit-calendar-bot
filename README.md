@@ -1,13 +1,33 @@
 # dit-calendar [![Build Status](https://travis-ci.org/vitaB/dit-calendar.svg?branch=master)](https://travis-ci.org/vitaB/dit-calendar)
 
-## purpose
-This is a tool for collective participatory projects. A calendar for self-administration of work for groups. The main goal for the calendar is to provide event entries, create tasks for an event and allow a user-task assigment.
+# config
+* enable inline queries `https://core.telegram.org/bots/inline`
 
-## dit-calendar-server
-The backend is build on happstack in haskell.
+# deployment
+* `gradle build`
+* `heroku deploy:jar build/libs/dit-calendar-bot-*-all.jar --app dit-calendar`
 
-## dit-calendar-ui
-Very simple web-ui written in elm. For creating events and tasks from the perspective of the organization group.
-
-## dit-calendar-bot
-Telegram bot for user task assignment written in kotlin.
+# manual test
+* https://core.telegram.org/bots/webhooks
+* check bot status `https://api.telegram.org/bot{token}/getWebhookInfo`
+* send message manually
+ `curl -v -k -X POST -H "Content-Type: application/json" -H "Cache-Control: no-cache"  -d '{
+ "update_id":10000,
+ "message":{
+   "date":1441645532,
+   "chat":{
+      "last_name":"Test Lastname",
+      "id":1111111,
+      "first_name":"Test",
+      "username":"Test"
+   },
+   "message_id":1365,
+   "from":{
+      "last_name":"Test Lastname",
+      "id":1111111,
+      "first_name":"Test",
+      "username":"Test"
+   },
+   "text":"/start"
+ }
+ }' "localhost:8443/"`

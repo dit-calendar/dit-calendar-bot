@@ -91,6 +91,8 @@ fun main(args: Array<String>) {
     //for deeplinking
     bot.onCommand("/start") { msg, opts ->
         serverDeploymentService.deployServer()
+
+        bot.deleteMessage(msg.chat.id, msg.message_id)
         val msgUser = msg.from
         //if message user is not set, we can't process
         if (msgUser == null) {
@@ -119,6 +121,8 @@ fun main(args: Array<String>) {
 
     bot.onCommand("/postcalendar") { msg, opts ->
         serverDeploymentService.deployServer()
+
+        bot.deleteMessage(msg.chat.id, msg.message_id)
         val msgUser = msg.from
         //if message user is not set, we can't process
         if (msgUser == null) {

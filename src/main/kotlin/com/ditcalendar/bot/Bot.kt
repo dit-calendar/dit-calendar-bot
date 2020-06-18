@@ -119,7 +119,7 @@ fun main(args: Array<String>) {
         bot.sendMessage(msg.chat.id, helpMessage)
     }
 
-    suspend fun postCalendarCommand(msg: Message, opts: String?) {
+    fun postCalendarCommand(msg: Message, opts: String?) {
         serverDeploymentService.deployServer()
 
         bot.deleteMessage(msg.chat.id, msg.message_id)

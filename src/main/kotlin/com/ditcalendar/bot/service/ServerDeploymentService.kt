@@ -3,7 +3,7 @@ package com.ditcalendar.bot.service
 import com.ditcalendar.bot.config.config
 import com.ditcalendar.bot.config.dit_calendar_deployment_url
 import com.ditcalendar.bot.config.dit_calendar_server_url
-import com.github.kittinunf.fuel.coroutines.awaitStringResponseResult
+import com.github.kittinunf.fuel.core.responseUnit
 import com.github.kittinunf.fuel.httpGet
 
 class ServerDeploymentService {
@@ -12,7 +12,7 @@ class ServerDeploymentService {
     private val ditCalendarUrl = config[dit_calendar_server_url]
     private val ditCalendarDeploymentUrl = config[dit_calendar_deployment_url]
 
-    suspend fun deployServer() {
+    fun deployServer() {
         if (!healthCheck())
             wakeUpServer()
     }
@@ -24,8 +24,9 @@ class ServerDeploymentService {
                     .second
                     .statusCode == 200
 
-    private suspend fun wakeUpServer() {
+    private fun wakeUpServer() {
         "$ditCalendarDeploymentUrl/"
-                .httpGet().awaitStringResponseResult()
+                .httpGet()
+                .responseUnit()
     }
 }

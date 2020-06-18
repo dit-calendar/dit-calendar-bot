@@ -37,9 +37,6 @@ fun main(args: Array<String>) {
     val deploymentService = ServerDeploymentService()
 
     val bot = if (config[webhook_is_enabled]) {
-        GlobalScope.launch {
-            deploymentService.deployServer()
-        }
         Bot.createWebhook(config[bot_name], token) {
             url = "https://$herokuApp.herokuapp.com/$token"
 
@@ -115,7 +112,7 @@ fun main(args: Array<String>) {
     }
 
     bot.onCommand("/help") { msg, _ ->
-        deploymentService.constraintsBeforeExecution(msg.message_id.toString()) {
+        checkGlobalStateBeforeHandling(msg.message_id.toString()) {
             bot.sendMessage(msg.chat.id, helpMessage)
         }
     }

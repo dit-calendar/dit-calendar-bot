@@ -119,18 +119,22 @@ fun main(args: Array<String>) {
         bot.sendMessage(msg.chat.id, helpMessage)
     }
 
-    bot.onCommand("/postcalendar") { msg, opts ->
+    suspend fun postCalendarCommand(msg: Message, opts: String?) {
         serverDeploymentService.deployServer()
 
         bot.deleteMessage(msg.chat.id, msg.message_id)
-        val msgUser = msg.from
-        //if message user is not set, we can't process
-        if (msgUser == null) {
-            bot.sendMessage(msg.chat.id, "fehlerhafte Anfrage")
-        } else {
-            val response = calendarService.executePublishCalendarCommand(opts)
-            sendMessage(response, bot, msg)
-        }
+        val response = calendarService.executePublishCalendarCommand(opts)
+        sendMessage(response, bot, msg)
+    }
+
+    bot.onCommand("/postcalendar") { msg, opts ->
+        postCalendarCommand(msg, opts)
+    }
+
+    bot.onChannelPost { msg ->
+        val msgText = msg.text
+        if(msgText != null && msgText.startsWith("/postcalendar"))
+            postCalendarCommand(msg, msgText.substringAfter(" "))
     }
 
     bot.start()

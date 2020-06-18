@@ -22,6 +22,8 @@ import com.github.kittinunf.result.success
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
+var globalStateForFirstMessage: String? = null
+
 val helpMessage =
         """
             Mögliche Befehle sind
@@ -57,32 +59,36 @@ fun main(args: Array<String>) {
     } else Bot.createPolling(config[bot_name], token)
 
     bot.onCallbackQuery { callbackQuery ->
-        serverDeploymentService.deployServer()
-        val request = callbackQuery.data
-        val originallyMessage = callbackQuery.message
+        if (globalStateForFirstMessage == null || globalStateForFirstMessage != callbackQuery.id) {
+            globalStateForFirstMessage = callbackQuery.id
 
-        if (request == null || originallyMessage == null) {
-            bot.answerCallbackQuery(callbackQuery.id, "fehlerhafte Anfrage")
-        } else {
-            val msgUser = callbackQuery.from
-            val telegramLink = TelegramLink(originallyMessage.chat.id, msgUser.id, msgUser.username, msgUser.first_name)
-            val response = calendarService.executeCallback(telegramLink, request)
+            serverDeploymentService.deployServer()
+            val request = callbackQuery.data
+            val originallyMessage = callbackQuery.message
 
-            when (val result = parseResponse(response)) {
-                is OnlyText -> {
-                    response.failure { bot.answerCallbackQuery(callbackQuery.id, result.message) }
-                    response.success {
-                        bot.answerCallbackQuery(callbackQuery.id, "erfolgreich ausgetragen")
-                        bot.editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = result.message,
-                                parseMode = "MarkdownV2")
+            if (request == null || originallyMessage == null) {
+                bot.answerCallbackQuery(callbackQuery.id, "fehlerhafte Anfrage")
+            } else {
+                val msgUser = callbackQuery.from
+                val telegramLink = TelegramLink(originallyMessage.chat.id, msgUser.id, msgUser.username, msgUser.first_name)
+                val response = calendarService.executeCallback(telegramLink, request)
+
+                when (val result = parseResponse(response)) {
+                    is OnlyText -> {
+                        response.failure { bot.answerCallbackQuery(callbackQuery.id, result.message) }
+                        response.success {
+                            bot.answerCallbackQuery(callbackQuery.id, "erfolgreich ausgetragen")
+                            bot.editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = result.message,
+                                    parseMode = "MarkdownV2")
+                        }
                     }
-                }
-                is WithInline -> {
-                    bot.answerCallbackQuery(callbackQuery.id, result.callbackNotificationText)
-                    val inlineButton = InlineKeyboardButton(result.callBackText, callback_data = result.callBackData)
-                    val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(inlineButton)))
-                    bot.editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = result.message,
-                            parseMode = "MarkdownV2", disableWebPagePreview = true, markup = inlineKeyboardMarkup)
+                    is WithInline -> {
+                        bot.answerCallbackQuery(callbackQuery.id, result.callbackNotificationText)
+                        val inlineButton = InlineKeyboardButton(result.callBackText, callback_data = result.callBackData)
+                        val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(inlineButton)))
+                        bot.editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = result.message,
+                                parseMode = "MarkdownV2", disableWebPagePreview = true, markup = inlineKeyboardMarkup)
+                    }
                 }
             }
         }
@@ -90,41 +96,53 @@ fun main(args: Array<String>) {
 
     //for deeplinking
     bot.onCommand("/start") { msg, opts ->
-        serverDeploymentService.deployServer()
+        if (globalStateForFirstMessage == null || globalStateForFirstMessage != msg.message_id.toString()) {
+            globalStateForFirstMessage = msg.message_id.toString()
 
-        bot.deleteMessage(msg.chat.id, msg.message_id)
-        val msgUser = msg.from
-        //if message user is not set, we can't process
-        if (msgUser == null) {
-            bot.sendMessage(msg.chat.id, "fehlerhafte Anfrage")
-        } else {
-            if (opts != null && opts.startsWith("assign")) {
+            serverDeploymentService.deployServer()
 
-                val taskId: Long? = opts.substringAfter("_").toLongOrNull()
-                if (taskId != null) {
-                    val assignMeButton = InlineKeyboardButton("Mit Telegram Namen", callback_data = assingWithNameCallbackCommand + taskId)
-                    val annonAssignMeButton = InlineKeyboardButton("Annonym", callback_data = assingAnnonCallbackCommand + taskId)
-                    val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(assignMeButton, annonAssignMeButton)))
-                    bot.sendMessage(msg.chat.id, "Darf ich dein Namen verwenden?", "MarkdownV2", true, markup = inlineKeyboardMarkup)
-                } else {
-                    sendMessage(Result.error(InvalidRequest()), bot, msg)
-                }
+            bot.deleteMessage(msg.chat.id, msg.message_id)
+            val msgUser = msg.from
+            //if message user is not set, we can't process
+            if (msgUser == null) {
+                bot.sendMessage(msg.chat.id, "fehlerhafte Anfrage")
             } else {
-                bot.sendMessage(msg.chat.id, helpMessage)
+                if (opts != null && opts.startsWith("assign")) {
+
+                    val taskId: Long? = opts.substringAfter("_").toLongOrNull()
+                    if (taskId != null) {
+                        val assignMeButton = InlineKeyboardButton("Mit Telegram Namen", callback_data = assingWithNameCallbackCommand + taskId)
+                        val annonAssignMeButton = InlineKeyboardButton("Annonym", callback_data = assingAnnonCallbackCommand + taskId)
+                        val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(assignMeButton, annonAssignMeButton)))
+                        bot.sendMessage(msg.chat.id, "Darf ich dein Namen verwenden?", "MarkdownV2", true, markup = inlineKeyboardMarkup)
+                    } else {
+                        sendMessage(Result.error(InvalidRequest()), bot, msg)
+                    }
+                } else {
+                    bot.sendMessage(msg.chat.id, helpMessage)
+                }
             }
         }
     }
 
     bot.onCommand("/help") { msg, _ ->
-        bot.sendMessage(msg.chat.id, helpMessage)
+        if (globalStateForFirstMessage == null || globalStateForFirstMessage != msg.message_id.toString()) {
+            globalStateForFirstMessage = msg.message_id.toString()
+
+            bot.sendMessage(msg.chat.id, helpMessage)
+        }
     }
 
     fun postCalendarCommand(msg: Message, opts: String?) {
-        serverDeploymentService.deployServer()
+        if (globalStateForFirstMessage == null || globalStateForFirstMessage != msg.message_id.toString()) {
+            globalStateForFirstMessage = msg.message_id.toString()
 
-        bot.deleteMessage(msg.chat.id, msg.message_id)
-        val response = calendarService.executePublishCalendarCommand(opts)
-        sendMessage(response, bot, msg)
+            serverDeploymentService.deployServer()
+
+            bot.deleteMessage(msg.chat.id, msg.message_id)
+            val response = calendarService.executePublishCalendarCommand(opts)
+            sendMessage(response, bot, msg)
+        }
     }
 
     bot.onCommand("/postcalendar") { msg, opts ->

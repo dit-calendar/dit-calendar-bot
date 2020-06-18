@@ -1,12 +1,8 @@
 package com.ditcalendar.bot
 
 import com.ditcalendar.bot.config.*
-import com.ditcalendar.bot.data.OnlyText
 import com.ditcalendar.bot.data.TelegramLink
-import com.ditcalendar.bot.data.WithInline
-import com.ditcalendar.bot.data.core.Base
 import com.ditcalendar.bot.error.InvalidRequest
-import com.ditcalendar.bot.formatter.parseResponse
 import com.ditcalendar.bot.service.*
 import com.elbekD.bot.Bot
 import com.elbekD.bot.server
@@ -14,10 +10,6 @@ import com.elbekD.bot.types.InlineKeyboardButton
 import com.elbekD.bot.types.InlineKeyboardMarkup
 import com.elbekD.bot.types.Message
 import com.github.kittinunf.result.Result
-import com.github.kittinunf.result.failure
-import com.github.kittinunf.result.success
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 val helpMessage =
         """
@@ -62,23 +54,7 @@ fun main(args: Array<String>) {
                 val telegramLink = TelegramLink(originallyMessage.chat.id, msgUser.id, msgUser.username, msgUser.first_name)
                 val response = calendarService.executeCallback(telegramLink, request)
 
-                when (val result = parseResponse(response)) {
-                    is OnlyText -> {
-                        response.failure { bot.answerCallbackQuery(callbackQuery.id, result.message) }
-                        response.success {
-                            bot.answerCallbackQuery(callbackQuery.id, "erfolgreich ausgetragen")
-                            bot.editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = result.message,
-                                    parseMode = "MarkdownV2")
-                        }
-                    }
-                    is WithInline -> {
-                        bot.answerCallbackQuery(callbackQuery.id, result.callbackNotificationText)
-                        val inlineButton = InlineKeyboardButton(result.callBackText, callback_data = result.callBackData)
-                        val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(inlineButton)))
-                        bot.editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = result.message,
-                                parseMode = "MarkdownV2", disableWebPagePreview = true, markup = inlineKeyboardMarkup)
-                    }
-                }
+                bot.callbackResponse(response, callbackQuery, originallyMessage)
             }
         }
     }
@@ -102,7 +78,7 @@ fun main(args: Array<String>) {
                         val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(assignMeButton, annonAssignMeButton)))
                         bot.sendMessage(msg.chat.id, "Darf ich dein Namen verwenden?", "MarkdownV2", true, markup = inlineKeyboardMarkup)
                     } else {
-                        sendMessage(Result.error(InvalidRequest()), bot, msg)
+                        bot.messageResponse(Result.error(InvalidRequest()), msg)
                     }
                 } else {
                     bot.sendMessage(msg.chat.id, helpMessage)
@@ -121,7 +97,7 @@ fun main(args: Array<String>) {
         deploymentService.constraintsBeforeExecution(msg.message_id.toString()) {
             bot.deleteMessage(msg.chat.id, msg.message_id)
             val response = calendarService.executePublishCalendarCommand(opts)
-            sendMessage(response, bot, msg)
+            bot.messageResponse(response, msg)
         }
     }
 
@@ -131,7 +107,7 @@ fun main(args: Array<String>) {
 
     bot.onChannelPost { msg ->
         val msgText = msg.text
-        if(msgText != null && msgText.startsWith("/postcalendar"))
+        if (msgText != null && msgText.startsWith("/postcalendar"))
             postCalendarCommand(msg, msgText.substringAfter(" "))
     }
 

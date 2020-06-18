@@ -5,6 +5,9 @@ import com.ditcalendar.bot.data.core.Base
 import com.ditcalendar.bot.error.DitBotError
 import com.ditcalendar.bot.error.InvalidRequest
 import com.ditcalendar.bot.error.UnassigmentError
+import com.ditcalendar.bot.service.TelegramResponse
+import com.ditcalendar.bot.service.WithInline
+import com.ditcalendar.bot.service.WithMessage
 import com.ditcalendar.bot.service.reloadCallbackCommand
 import com.github.kittinunf.fuel.core.FuelError
 import com.github.kittinunf.result.Result
@@ -26,15 +29,15 @@ private fun parseSuccess(result: Base): TelegramResponse =
                 WithInline(result.toMarkdown(),
                         "unassign me", "unassign_${result.task.taskId}", null)
             is TelegramTaskForAssignment ->
-                OnlyText("nicht implementiert")
+                WithMessage("nicht implementiert", null)
             is TelegramTaskAfterUnassignment ->
-                OnlyText(result.toMarkdown())
+                WithMessage(result.toMarkdown(), "erfolgreich ausgetragen")
             else ->
-                OnlyText("interner server Fehler")
+                WithMessage("interner server Fehler", null)
         }
 
 private fun parseError(error: Exception): TelegramResponse =
-        OnlyText(when (error) {
+        WithMessage(when (error) {
             is FuelError -> {
                 when (error.response.statusCode) {
                     401 -> "Bot fehlen notwendige Zugriffsrechte"
@@ -57,4 +60,4 @@ private fun parseError(error: Exception): TelegramResponse =
                 }
             }
             else -> "unbekannter Fehler"
-        })
+        }, null)

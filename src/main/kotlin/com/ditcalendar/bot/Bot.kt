@@ -7,10 +7,7 @@ import com.ditcalendar.bot.data.WithInline
 import com.ditcalendar.bot.data.core.Base
 import com.ditcalendar.bot.error.InvalidRequest
 import com.ditcalendar.bot.formatter.parseResponse
-import com.ditcalendar.bot.service.DitCalendarService
-import com.ditcalendar.bot.service.ServerDeploymentService
-import com.ditcalendar.bot.service.assingAnnonCallbackCommand
-import com.ditcalendar.bot.service.assingWithNameCallbackCommand
+import com.ditcalendar.bot.service.*
 import com.elbekD.bot.Bot
 import com.elbekD.bot.server
 import com.elbekD.bot.types.InlineKeyboardButton
@@ -21,8 +18,6 @@ import com.github.kittinunf.result.failure
 import com.github.kittinunf.result.success
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-
-var globalStateForFirstMessage: String? = null
 
 val helpMessage =
         """
@@ -39,11 +34,11 @@ fun main(args: Array<String>) {
     val token = config[telegram_token]
     val herokuApp = config[heroku_app_name]
     val calendarService = DitCalendarService()
-    val serverDeploymentService = ServerDeploymentService()
+    val deploymentService = ServerDeploymentService()
 
     val bot = if (config[webhook_is_enabled]) {
         GlobalScope.launch {
-            serverDeploymentService.deployServer()
+            deploymentService.deployServer()
         }
         Bot.createWebhook(config[bot_name], token) {
             url = "https://$herokuApp.herokuapp.com/$token"
@@ -59,10 +54,7 @@ fun main(args: Array<String>) {
     } else Bot.createPolling(config[bot_name], token)
 
     bot.onCallbackQuery { callbackQuery ->
-        if (globalStateForFirstMessage == null || globalStateForFirstMessage != callbackQuery.id) {
-            globalStateForFirstMessage = callbackQuery.id
-
-            serverDeploymentService.deployServer()
+        deploymentService.constraintsBeforeExecution(callbackQuery.id) {
             val request = callbackQuery.data
             val originallyMessage = callbackQuery.message
 
@@ -96,10 +88,7 @@ fun main(args: Array<String>) {
 
     //for deeplinking
     bot.onCommand("/start") { msg, opts ->
-        if (globalStateForFirstMessage == null || globalStateForFirstMessage != msg.message_id.toString()) {
-            globalStateForFirstMessage = msg.message_id.toString()
-
-            serverDeploymentService.deployServer()
+        deploymentService.constraintsBeforeExecution(msg.message_id.toString()) {
 
             bot.deleteMessage(msg.chat.id, msg.message_id)
             val msgUser = msg.from
@@ -126,19 +115,13 @@ fun main(args: Array<String>) {
     }
 
     bot.onCommand("/help") { msg, _ ->
-        if (globalStateForFirstMessage == null || globalStateForFirstMessage != msg.message_id.toString()) {
-            globalStateForFirstMessage = msg.message_id.toString()
-
+        deploymentService.constraintsBeforeExecution(msg.message_id.toString()) {
             bot.sendMessage(msg.chat.id, helpMessage)
         }
     }
 
     fun postCalendarCommand(msg: Message, opts: String?) {
-        if (globalStateForFirstMessage == null || globalStateForFirstMessage != msg.message_id.toString()) {
-            globalStateForFirstMessage = msg.message_id.toString()
-
-            serverDeploymentService.deployServer()
-
+        deploymentService.constraintsBeforeExecution(msg.message_id.toString()) {
             bot.deleteMessage(msg.chat.id, msg.message_id)
             val response = calendarService.executePublishCalendarCommand(opts)
             sendMessage(response, bot, msg)
@@ -156,16 +139,4 @@ fun main(args: Array<String>) {
     }
 
     bot.start()
-}
-
-private fun sendMessage(response: Result<Base, Exception>, bot: Bot, msg: Message) {
-    when (val result = parseResponse(response)) {
-        is OnlyText ->
-            bot.sendMessage(msg.chat.id, result.message, "MarkdownV2", true)
-        is WithInline -> {
-            val inlineButton = InlineKeyboardButton(result.callBackText, callback_data = result.callBackData)
-            val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(inlineButton)))
-            bot.sendMessage(msg.chat.id, result.message, "MarkdownV2", true, markup = inlineKeyboardMarkup)
-        }
-    }
 }

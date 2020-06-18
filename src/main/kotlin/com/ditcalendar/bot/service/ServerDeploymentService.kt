@@ -29,4 +29,25 @@ class ServerDeploymentService {
                 .httpGet()
                 .responseUnit()
     }
+
+    inline fun constraintsBeforeExecution(msgId: String, requestHandling : () -> Unit) {
+        checkGlobalStateBeforeHandling(msgId) {
+            deployBeforeExecution(requestHandling)
+        }
+    }
+
+    inline fun deployBeforeExecution(requestHandling : () -> Unit) {
+        deployServer()
+
+        requestHandling()
+    }
 }
+
+inline fun checkGlobalStateBeforeHandling(msgId: String, requestHandling : () -> Unit) {
+    if (globalStateForFirstMessage == null || globalStateForFirstMessage != msgId) {
+        globalStateForFirstMessage = msgId
+        requestHandling()
+    }
+}
+
+var globalStateForFirstMessage: String? = null

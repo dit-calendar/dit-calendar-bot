@@ -1,0 +1,27 @@
+{
+  "name": "DIT Calendar Telegram Bot",
+  "description": "Telegram Bot for task assignment",
+  "website": "https://github.com/dit-calendar/dit-calendar.github.io",
+  "repository": "https://github.com/dit-calendar/dit-calendar-bot",
+  "keywords": [
+    "dit-calendar",
+    "telegram-bot"
+  ],
+  "env": {
+    "HEROKU_APP_NAME": {
+      "description": "enter the heroku App name here again"
+    },
+    "DIT_CALENDAR_USER_NAME": {
+      "description": "your DIT-Calendar account name"
+    },
+    "DIT_CALENDAR_USER_PASSWORD": {
+      "description": "your DIT-Calendar account password"
+    },
+    "TELEGRAM_TOKEN": {
+      "description": "telegram token you got from Botfather"
+    },
+    "BOT_NAME": {
+      "description": "name of your Telegram bot. Without '@'"
+    }
+  }
+}

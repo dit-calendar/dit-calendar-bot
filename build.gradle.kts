@@ -49,3 +49,16 @@ tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions.freeCompilerArgs = listOf("-Xjsr305=strict")
     incremental = true
 }
+
+tasks.register("stage") {
+    dependsOn("build", "clean")
+    mustRunAfter("clean")
+
+    //clean up build
+    doLast {
+        File("build1").mkdirs()
+        File("build/libs").copyRecursively(File("build1/libs"))
+        delete("build")
+        File("build1").renameTo(File("build"))
+    }
+}

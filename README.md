@@ -1,5 +1,7 @@
 # dit-calendar-bot [![Build Status](https://travis-ci.org/dit-calendar/dit-calendar-bot.svg?branch=master)](https://travis-ci.org/dit-calendar/dit-calendar-bot)
 
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/dit-calendar/dit-calendar-bot)
+
 # config
 * enable inline queries `https://core.telegram.org/bots/inline`
 

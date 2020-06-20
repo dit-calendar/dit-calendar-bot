@@ -1,6 +1,9 @@
 package com.ditcalendar.bot.formatter
 
-import com.ditcalendar.bot.data.*
+import com.ditcalendar.bot.data.DitCalendar
+import com.ditcalendar.bot.data.TelegramTaskAfterUnassignment
+import com.ditcalendar.bot.data.TelegramTaskForAssignment
+import com.ditcalendar.bot.data.TelegramTaskForUnassignment
 import com.ditcalendar.bot.data.core.Base
 import com.ditcalendar.bot.error.DitBotError
 import com.ditcalendar.bot.error.InvalidRequest
@@ -11,6 +14,7 @@ import com.ditcalendar.bot.service.WithMessage
 import com.ditcalendar.bot.service.reloadCallbackCommand
 import com.github.kittinunf.fuel.core.FuelError
 import com.github.kittinunf.result.Result
+import kotlinx.serialization.json.JsonDecodingException
 
 fun parseResponse(result: Result<Base, Exception>): TelegramResponse =
         when (result) {
@@ -44,7 +48,9 @@ private fun parseError(error: Exception): TelegramResponse =
                     403 -> "Bot fehlen notwendige Zugriffsrechte"
                     404 -> "Kalendar oder Task nicht gefunden"
                     503 -> "Server nicht erreichbar, versuchs nochmal"
-                    else -> if (error.message != null)
+                    else -> if (error.cause is JsonDecodingException) {
+                        "unexpected server response"
+                    } else if (error.message != null)
                         "Error: " + error.message.toString()
                                 .replace("\"", "")
                                 .replace("-", "\\-")

@@ -9,7 +9,6 @@ import com.ditcalendar.bot.endpoint.AuthEndpoint
 import com.ditcalendar.bot.endpoint.CalendarEndpoint
 import com.ditcalendar.bot.endpoint.TelegramAssignmentEndpoint
 import com.ditcalendar.bot.error.InvalidRequest
-import com.ditcalendar.bot.error.UnassigmentError
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.flatMap
 import com.github.kittinunf.result.map
@@ -81,6 +80,5 @@ class DitCalendarService {
     private fun unassignUserFromTask(taskId: Long, telegramLink: TelegramLink): Result<TelegramTaskAfterUnassignment, Exception> {
         return authEndpoint.getToken()
                 .flatMap { taskEndpoint.unassignUserFromTask(taskId, telegramLink, it) }
-                .fold({ Result.Success(it) }, { Result.error(UnassigmentError()) })
     }
 }

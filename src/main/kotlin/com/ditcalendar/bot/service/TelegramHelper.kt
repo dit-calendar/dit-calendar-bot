@@ -26,7 +26,7 @@ fun Bot.messageResponse(response: Result<Base, Exception>, msg: Message) {
 fun Bot.callbackResponse(response: Result<Base, Exception>, callbackQuery: CallbackQuery, originallyMessage: Message) {
     when (val result = parseResponse(response)) {
         is WithMessage -> {
-            response.failure { answerCallbackQuery(callbackQuery.id, result.message) }
+            response.failure { answerCallbackQuery(callbackQuery.id, result.message, alert = true) }
             response.success {
                 if(result.callbackNotificationText != null)
                 answerCallbackQuery(callbackQuery.id, result.callbackNotificationText)

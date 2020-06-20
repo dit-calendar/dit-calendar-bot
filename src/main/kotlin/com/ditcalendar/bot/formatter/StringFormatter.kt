@@ -7,7 +7,7 @@ import com.ditcalendar.bot.data.TelegramTaskForUnassignment
 import com.ditcalendar.bot.data.core.Base
 import com.ditcalendar.bot.error.DitBotError
 import com.ditcalendar.bot.error.InvalidRequest
-import com.ditcalendar.bot.error.UnassigmentError
+import com.ditcalendar.bot.error.ServerNotReachable
 import com.ditcalendar.bot.service.TelegramResponse
 import com.ditcalendar.bot.service.WithInline
 import com.ditcalendar.bot.service.WithMessage
@@ -44,10 +44,10 @@ private fun parseError(error: Exception): TelegramResponse =
         WithMessage(when (error) {
             is FuelError -> {
                 when (error.response.statusCode) {
-                    401 -> "Bot fehlen notwendige Zugriffsrechte"
-                    403 -> "Bot fehlen notwendige Zugriffsrechte"
-                    404 -> "Kalendar oder Task nicht gefunden"
-                    503 -> "Server nicht erreichbar, versuchs nochmal"
+                    401 -> "Bot is missing necessary access rights"
+                    403 -> "Bot is missing necessary access rights"
+                    404 -> "calendar or task not found"
+                    503 -> "server not reachable, try again in a moment"
                     else -> if (error.cause is JsonDecodingException) {
                         "unexpected server response"
                     } else if (error.message != null)
@@ -61,9 +61,9 @@ private fun parseError(error: Exception): TelegramResponse =
             }
             is DitBotError -> {
                 when (error) {
-                    is InvalidRequest -> "fehlerhafte Anfrage"
-                    is UnassigmentError -> "fehlgeschlagen"
+                    is InvalidRequest -> "incorrect request to server"
+                    is ServerNotReachable -> "server need to startup, try again"
                 }
             }
-            else -> "unbekannter Fehler"
+            else -> "unknown error"
         }, null)

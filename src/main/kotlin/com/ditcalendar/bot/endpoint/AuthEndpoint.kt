@@ -4,6 +4,7 @@ import com.ditcalendar.bot.config.config
 import com.ditcalendar.bot.config.dit_calendar_server_url
 import com.ditcalendar.bot.config.dit_calendar_user_name
 import com.ditcalendar.bot.config.dit_calendar_user_password
+import com.ditcalendar.bot.error.ServerNotReachable
 import com.github.kittinunf.fuel.httpPost
 import com.github.kittinunf.fuel.serialization.responseObject
 import com.github.kittinunf.result.Result
@@ -23,7 +24,12 @@ class AuthEndpoint {
 
     private val json = Json(JsonConfiguration.Stable.copy())
 
+    private val monitorEndpoint = MonitoringEndpoint()
+
     fun getToken(): Result<String, Exception> {
+
+        if (!monitorEndpoint.healthCheck())
+            return Result.error(ServerNotReachable())
 
         val (_, _, result) = "$ditCalendarUrl/authenticate/authentication-methods/password/token"
                 .httpPost()

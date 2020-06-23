@@ -18,23 +18,23 @@ fun TelegramTaskAssignment.toMarkdown(): String =
         when (this.task) {
             is TaskForAssignment ->
                 """
-                    *${task.formatTime()}* \- ${task.title}
+                    *${task.formatTime()}* \- ${task.title.withMDEscape()}
                     Wer?: ${assignedUsers.toMarkdown()} [assign me](https://t.me/$botName?start=assign_${task.taskId})
                 """.trimIndent()
             is TaskForUnassignment -> {
                 val formattedDescription =
                         if (task.description != null)
-                            System.lineSeparator() + task.description.toString()
+                            System.lineSeparator() + task.description.toString().withMDEscape()
                         else ""
                 "*erfolgreich hinzugefügt:*" + System.lineSeparator() +
-                        "*${formatter.format(task.startTime.time)} Uhr* \\- ${task.title}$formattedDescription" + System.lineSeparator() +
+                        "*${formatter.format(task.startTime.time)} Uhr* \\- ${task.title.withMDEscape()}$formattedDescription" + System.lineSeparator() +
                         "Wer?: ${assignedUsers.toMarkdown()}"
             }
 
             is TaskAfterUnassignment ->
                 """
                     *erfolgreich ausgetragen*:
-                    *${formatter.format(task.startTime.time)} Uhr* \- ${task.title}
+                    *${formatter.format(task.startTime.time)} Uhr* \- ${task.title.withMDEscape()}
                 """.trimIndent()
         }
 
@@ -46,7 +46,7 @@ private fun Task.formatTime(): String {
 
 @JvmName("toMarkdownForTelegramLinks")
 private fun TelegramLinks.toMarkdown(): String {
-    var firstNames = this.filter { it.firstName != null }.joinToString(", ") { it.firstName!! }
+    var firstNames = this.filter { it.firstName != null }.joinToString(", ") { it.firstName!!.withMDEscape() }
     val anonymousCount = this.count { it.firstName == null }
     firstNames += if (anonymousCount != 0) " \\+$anonymousCount" else ""
     return firstNames
@@ -59,10 +59,20 @@ fun TelegramTaskAssignments.toMarkdown(): String = System.lineSeparator() +
 fun DitCalendar.toMarkdown(): String {
     val formattedDescription =
             if (description != null)
-                System.lineSeparator() + description.toString() + System.lineSeparator()
+                System.lineSeparator() + description.toString().withMDEscape() + System.lineSeparator()
             else ""
 
     return """
             *$title* am ${dateFormatter.format(startDate).replace(".", "\\.")}$formattedDescription
         """.trimIndent() + telegramTaskAssignments.toMarkdown()
 }
+
+fun String.withMDEscape() =
+        this.replace("\"", "")
+                .replace("!", "\\!")
+                .replace("+", "\\+")
+                .replace("-", "\\-")
+                .replace("_", "\\_")
+                .replace(".", "\\.")
+                .replace("*", "\\*")
+                .replace("#", "\\#")

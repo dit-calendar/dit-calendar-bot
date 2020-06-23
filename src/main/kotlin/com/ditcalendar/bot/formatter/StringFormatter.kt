@@ -51,11 +51,7 @@ private fun parseError(error: Exception): TelegramResponse =
                     else -> if (error.cause is JsonDecodingException) {
                         "unexpected server response"
                     } else if (error.message != null)
-                        "Error: " + error.message.toString()
-                                .replace("\"", "")
-                                .replace("-", "\\-")
-                                .replace("_", "\\_")
-                                .replace(".", "\\.")
+                        "Error: " + error.message.toString().withMDEscape()
                     else "unkown Error"
                 }
             }

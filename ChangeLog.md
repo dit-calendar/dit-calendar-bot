@@ -1,5 +1,12 @@
 # Revision history for dit-calendar
 
+## 0.7.0.0 -- 2020-06-26
+* split up repos
+* update jvm
+* start server if health check is not successful
+* handling /postcalendar also for channels
+* add heroku button
+
 ## 0.6.0.0 -- 2020-06-01
 * create telegram bot
   * written in kotlin with kt-telegram-bot lib

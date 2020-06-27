@@ -12,16 +12,16 @@
       "description": "enter the heroku App name here again"
     },
     "DIT_CALENDAR_USER_NAME": {
-      "description": "your DIT-Calendar account name"
+      "description": "your DIT-Calendar login name"
     },
     "DIT_CALENDAR_USER_PASSWORD": {
-      "description": "your DIT-Calendar account password"
+      "description": "your DIT-Calendar login password"
     },
     "TELEGRAM_TOKEN": {
       "description": "telegram token you got from Botfather"
     },
     "BOT_NAME": {
-      "description": "name of your Telegram bot. Without '@'"
+      "description": "username of your telegram bot. Without '@'"
     }
   }
 }

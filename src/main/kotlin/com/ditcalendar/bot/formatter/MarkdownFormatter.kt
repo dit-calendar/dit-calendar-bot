@@ -69,6 +69,8 @@ fun DitCalendar.toMarkdown(): String {
 
 fun String.withMDEscape() =
         this.replace("\"", "")
+                .replace("\\", "\\\\")
+                .replace("`", "\\`")
                 .replace("!", "\\!")
                 .replace("+", "\\+")
                 .replace("-", "\\-")
@@ -76,3 +78,9 @@ fun String.withMDEscape() =
                 .replace(".", "\\.")
                 .replace("*", "\\*")
                 .replace("#", "\\#")
+                .replace("{", "\\{")
+                .replace("}", "\\}")
+                .replace("[", "\\[")
+                .replace("]", "\\]")
+                .replace("(", "\\(")
+                .replace(")", "\\)")

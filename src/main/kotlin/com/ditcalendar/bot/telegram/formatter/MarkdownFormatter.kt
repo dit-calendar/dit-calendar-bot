@@ -1,8 +1,8 @@
-package com.ditcalendar.bot.formatter
+package com.ditcalendar.bot.telegram.formatter
 
 import com.ditcalendar.bot.config.bot_name
 import com.ditcalendar.bot.config.config
-import com.ditcalendar.bot.data.*
+import com.ditcalendar.bot.ditCalendarServer.data.*
 import java.text.SimpleDateFormat
 
 
@@ -71,9 +71,13 @@ fun String.withMDEscape() =
         this.replace("\"", "")
                 .replace("\\", "\\\\")
                 .replace("`", "\\`")
+                .replace("~", "\\~")
+                .replace(">", "\\>")
                 .replace("!", "\\!")
                 .replace("+", "\\+")
                 .replace("-", "\\-")
+                .replace("=", "\\=")
+                .replace("|", "\\|")
                 .replace("_", "\\_")
                 .replace(".", "\\.")
                 .replace("*", "\\*")

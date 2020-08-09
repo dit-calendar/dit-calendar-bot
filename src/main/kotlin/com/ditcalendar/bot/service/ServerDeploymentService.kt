@@ -2,7 +2,8 @@ package com.ditcalendar.bot.service
 
 import com.ditcalendar.bot.config.config
 import com.ditcalendar.bot.config.dit_calendar_deployment_url
-import com.ditcalendar.bot.endpoint.MonitoringEndpoint
+import com.ditcalendar.bot.ditCalendarServer.endpoint.MonitoringEndpoint
+import com.ditcalendar.bot.telegram.service.checkGlobalStateBeforeHandling
 import com.github.kittinunf.fuel.core.responseUnit
 import com.github.kittinunf.fuel.httpGet
 import kotlinx.coroutines.GlobalScope
@@ -40,12 +41,3 @@ class ServerDeploymentService {
         requestHandling()
     }
 }
-
-inline fun checkGlobalStateBeforeHandling(msgId: String, requestHandling: () -> Unit) {
-    if (globalStateForFirstMessage == null || globalStateForFirstMessage != msgId) {
-        globalStateForFirstMessage = msgId
-        requestHandling()
-    }
-}
-
-var globalStateForFirstMessage: String? = null

@@ -1,4 +1,4 @@
-package com.ditcalendar.bot.data.core
+package com.ditcalendar.bot.ditCalendarServer.data.core
 
 import kotlinx.serialization.*
 import java.text.DateFormat

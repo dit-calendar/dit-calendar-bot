@@ -1,4 +1,4 @@
-package com.ditcalendar.bot.data
+package com.ditcalendar.bot.ditCalendarServer.data
 
 import kotlinx.serialization.Serializable
 

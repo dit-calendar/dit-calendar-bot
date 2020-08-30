@@ -1,58 +1,83 @@
 package com.ditcalendar.bot.telegram.service
 
+import com.ditcalendar.bot.ditCalendarServer.data.DitCalendar
+import com.ditcalendar.bot.ditCalendarServer.data.TelegramTaskAfterUnassignment
+import com.ditcalendar.bot.ditCalendarServer.data.TelegramTaskForUnassignment
 import com.ditcalendar.bot.ditCalendarServer.data.core.Base
-import com.ditcalendar.bot.domain.data.InvalidRequest
-import com.ditcalendar.bot.helpMessage
-import com.ditcalendar.bot.service.assignDeepLinkCommand
 import com.ditcalendar.bot.service.assingAnnonCallbackCommand
 import com.ditcalendar.bot.service.assingWithNameCallbackCommand
-import com.ditcalendar.bot.telegram.data.InlineMessageResponse
-import com.ditcalendar.bot.telegram.data.MessageResponse
-import com.ditcalendar.bot.telegram.formatter.parseResponse
+import com.ditcalendar.bot.service.reloadCallbackCommand
+import com.ditcalendar.bot.service.unassignCallbackCommand
+import com.ditcalendar.bot.telegram.formatter.parseError
+import com.ditcalendar.bot.telegram.formatter.toMarkdown
 import com.elbekD.bot.Bot
 import com.elbekD.bot.types.CallbackQuery
 import com.elbekD.bot.types.InlineKeyboardButton
 import com.elbekD.bot.types.InlineKeyboardMarkup
 import com.elbekD.bot.types.Message
 import com.github.kittinunf.result.Result
-import com.github.kittinunf.result.failure
-import com.github.kittinunf.result.success
 import java.util.concurrent.CompletableFuture
 
 const val parseMode = "MarkdownV2"
 const val wrongRequestResponse = "request invalid"
+const val reloadButtonText = "reload"
+const val calendarReloadCallbackNotification = "calendar was reloaded"
 
-fun Bot.messageResponse(response: Result<Base, Exception>, chatId: Long) {
-    when (val result = parseResponse(response)) {
-        is MessageResponse ->
-            sendMessage(chatId, result.message, "MarkdownV2", true)
-        is InlineMessageResponse -> {
-            val inlineButton = InlineKeyboardButton(result.callBackText, callback_data = result.callBackData)
-            val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(inlineButton)))
-            sendMessage(chatId, result.message, "MarkdownV2", true, markup = inlineKeyboardMarkup)
+fun Bot.commandResponse(response: Result<Base, Exception>, chatId: Long): CompletableFuture<Message> =
+        when (response) {
+            is Result.Success ->
+                when (val responseObject = response.value) {
+                    is DitCalendar -> {
+                        val inlineButton = InlineKeyboardButton(reloadButtonText, callback_data = "$reloadCallbackCommand${responseObject.entryId}")
+                        val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(inlineButton)))
+                        sendMessage(chatId, responseObject.toMarkdown() + System.lineSeparator(), parseMode, true, markup = inlineKeyboardMarkup)
+                    }
+                    else ->
+                        sendMessage(chatId, "internal server error", parseMode, true)
+                }
+            is Result.Failure ->
+                sendMessage(chatId, parseError(response.error), parseMode, true)
         }
+
+
+fun Bot.callbackResponse(response: Result<Base, Exception>, callbackQuery: CallbackQuery, originallyMessage: Message) {
+    when (response) {
+        is Result.Success ->
+            when (val responseObject = response.value) {
+                is DitCalendar -> {
+                    val inlineButton = InlineKeyboardButton(reloadButtonText, callback_data = "$reloadCallbackCommand${responseObject.entryId}")
+                    val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(inlineButton)))
+                    val telegramAnswer = editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = responseObject.toMarkdown() + System.lineSeparator(),
+                            parseMode = parseMode, disableWebPagePreview = true, markup = inlineKeyboardMarkup)
+
+                    telegramAnswer.handleCallbackQuery(this, callbackQuery.id, calendarReloadCallbackNotification)
+                }
+                is TelegramTaskForUnassignment -> {
+                    val inlineButton = InlineKeyboardButton("unassign me", callback_data = "$unassignCallbackCommand${responseObject.task.taskId}")
+                    val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(inlineButton)))
+                    val telegramAnswer = editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = responseObject.toMarkdown(),
+                            parseMode = parseMode, disableWebPagePreview = true, markup = inlineKeyboardMarkup)
+
+                    telegramAnswer.handleCallbackQuery(this, callbackQuery.id, null)
+                }
+                is TelegramTaskAfterUnassignment -> {
+                    val telegramAnswer = editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = responseObject.toMarkdown(),
+                            parseMode = parseMode)
+                    telegramAnswer.handleCallbackQuery(this, callbackQuery.id, "successfully signed out")
+                }
+                else ->
+                    answerCallbackQuery(callbackQuery.id, "internal server error", alert = true)
+            }
+        is Result.Failure ->
+            answerCallbackQuery(callbackQuery.id, parseError(response.error), alert = true)
     }
 }
 
-fun Bot.callbackResponse(response: Result<Base, Exception>, callbackQuery: CallbackQuery, originallyMessage: Message) {
-    when (val result = parseResponse(response)) {
-        is MessageResponse -> {
-            response.failure { answerCallbackQuery(callbackQuery.id, result.message, alert = true) }
-            response.success {
-                val telegramAnswer = editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = result.message,
-                        parseMode = parseMode)
-                telegramAnswer.handleCallbackQuery(this, callbackQuery.id, result.callbackNotificationText)
-            }
-        }
-        is InlineMessageResponse -> {
-            val inlineButton = InlineKeyboardButton(result.callBackText, callback_data = result.callBackData)
-            val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(inlineButton)))
-            val telegramAnswer = editMessageText(originallyMessage.chat.id, originallyMessage.message_id, text = result.message,
-                    parseMode = parseMode, disableWebPagePreview = true, markup = inlineKeyboardMarkup)
-
-            telegramAnswer.handleCallbackQuery(this, callbackQuery.id, result.callbackNotificationText)
-        }
-    }
+fun Bot.deepLinkResponse(callbackOpts: String, chatId: Long) {
+    val assignMeButton = InlineKeyboardButton("With telegram name", callback_data = assingWithNameCallbackCommand + callbackOpts)
+    val anonAssignMeButton = InlineKeyboardButton("anonymous", callback_data = assingAnnonCallbackCommand + callbackOpts)
+    val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(assignMeButton, anonAssignMeButton)))
+    sendMessage(chatId, "Can I use your name?", parseMode, true, markup = inlineKeyboardMarkup)
 }
 
 private fun CompletableFuture<Message>.handleCallbackQuery(bot: Bot, calbackQueryId: String, callbackNotificationText: String?) {
@@ -60,21 +85,5 @@ private fun CompletableFuture<Message>.handleCallbackQuery(bot: Bot, calbackQuer
         if (throwable == null || throwable.message!!.contains("Bad Request: message is not modified"))
             if (callbackNotificationText != null)
                 bot.answerCallbackQuery(calbackQueryId, callbackNotificationText)
-    }
-}
-
-fun Bot.responseForDeeplink(chatId: Long, opts: String) {
-    if (opts.startsWith(assignDeepLinkCommand)) {
-        val callbackOpts: String = opts.substringAfter(assignDeepLinkCommand)
-        if (callbackOpts.isNotBlank()) {
-            val assignMeButton = InlineKeyboardButton("With telegram name", callback_data = assingWithNameCallbackCommand + callbackOpts)
-            val annonAssignMeButton = InlineKeyboardButton("Annonym", callback_data = assingAnnonCallbackCommand + callbackOpts)
-            val inlineKeyboardMarkup = InlineKeyboardMarkup(listOf(listOf(assignMeButton, annonAssignMeButton)))
-            sendMessage(chatId, "Can I use your name?", parseMode, true, markup = inlineKeyboardMarkup)
-        } else {
-            messageResponse(Result.error(InvalidRequest()), chatId)
-        }
-    } else {
-        sendMessage(chatId, helpMessage)
     }
 }

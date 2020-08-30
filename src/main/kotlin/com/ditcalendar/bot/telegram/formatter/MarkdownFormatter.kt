@@ -19,21 +19,23 @@ fun TelegramTaskAssignment.toMarkdown(): String =
             is TaskForAssignment ->
                 """
                     *${task.formatTime()}* \- ${task.title.withMDEscape()}
-                    Wer?: ${assignedUsers.toMarkdown()} [assign me](https://t.me/$botName?start=assign_${task.taskId})
+                    Who?: ${assignedUsers.toMarkdown()} [assign me](https://t.me/$botName?start=assign_${task.taskId})
                 """.trimIndent()
             is TaskForUnassignment -> {
                 val formattedDescription =
                         if (task.description != null)
                             System.lineSeparator() + task.description.toString().withMDEscape()
                         else ""
-                "*erfolgreich hinzugefügt:*" + System.lineSeparator() +
+                "*successfully assigned:*" + System.lineSeparator() +
+                        task.formatDate() + System.lineSeparator() +
                         "*${formatter.format(task.startTime.time)} Uhr* \\- ${task.title.withMDEscape()}$formattedDescription" + System.lineSeparator() +
-                        "Wer?: ${assignedUsers.toMarkdown()}"
+                        "Who?: ${assignedUsers.toMarkdown()}"
             }
 
             is TaskAfterUnassignment ->
                 """
-                    *erfolgreich ausgetragen*:
+                    *successfully removed from*:
+                    ${task.formatDate()}
                     *${formatter.format(task.startTime.time)} Uhr* \- ${task.title.withMDEscape()}
                 """.trimIndent()
         }
@@ -43,6 +45,8 @@ private fun Task.formatTime(): String {
     timeString += if (this.endTime != null) " \\- " + formatter.format(this.endTime) else ""
     return timeString + " Uhr"
 }
+
+private fun Task.formatDate(): String = SimpleDateFormat("dd.MM.yyyy").format(this.startTime).withMDEscape()
 
 @JvmName("toMarkdownForTelegramLinks")
 private fun TelegramLinks.toMarkdown(): String {

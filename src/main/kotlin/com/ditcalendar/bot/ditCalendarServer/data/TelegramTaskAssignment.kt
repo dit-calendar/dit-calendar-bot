@@ -1,6 +1,6 @@
-package com.ditcalendar.bot.data
+package com.ditcalendar.bot.ditCalendarServer.data
 
-import com.ditcalendar.bot.data.core.Base
+import com.ditcalendar.bot.ditCalendarServer.data.core.Base
 import kotlinx.serialization.Serializable
 
 typealias TelegramTaskAssignments = List<TelegramTaskAssignment>

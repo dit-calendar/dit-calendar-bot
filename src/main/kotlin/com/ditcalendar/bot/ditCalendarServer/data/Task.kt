@@ -1,7 +1,7 @@
-package com.ditcalendar.bot.data
+package com.ditcalendar.bot.ditCalendarServer.data
 
-import com.ditcalendar.bot.data.core.Base
-import com.ditcalendar.bot.data.core.DateSerializer
+import com.ditcalendar.bot.ditCalendarServer.data.core.Base
+import com.ditcalendar.bot.ditCalendarServer.data.core.DateSerializer
 import kotlinx.serialization.Serializable
 import java.util.*
 

@@ -1,4 +1,4 @@
-package com.ditcalendar.bot.endpoint
+package com.ditcalendar.bot.ditCalendarServer.endpoint
 
 import com.ditcalendar.bot.config.config
 import com.ditcalendar.bot.config.dit_calendar_server_url

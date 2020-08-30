@@ -1,8 +1,8 @@
-package com.ditcalendar.bot.endpoint
+package com.ditcalendar.bot.ditCalendarServer.endpoint
 
 import com.ditcalendar.bot.config.config
 import com.ditcalendar.bot.config.dit_calendar_server_url
-import com.ditcalendar.bot.data.DitCalendar
+import com.ditcalendar.bot.ditCalendarServer.data.DitCalendar
 import com.github.kittinunf.fuel.core.extensions.authentication
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.serialization.responseObject

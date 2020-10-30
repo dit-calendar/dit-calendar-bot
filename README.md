@@ -2,7 +2,7 @@
 
 This is a tool for (collective) participatory/collaborative projects. A calendar with tasks for self-administration of work for groups. The main goal for this tool is to provide a calendar for events, create tasks for an event and allow a user-task assignment via [telegram](https://telegram.org/).
 
-> :octocat: Alternatively,  [other calendars](https://github.com/dit-calendar/dit-calendar.github.io) are also supported.
+> :octocat: Alternatively, [other calendars](https://github.com/dit-calendar/dit-calendar.github.io) are also supported.
 
 you can create an event with tasks
 

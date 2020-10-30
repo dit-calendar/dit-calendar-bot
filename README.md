@@ -42,9 +42,6 @@ To update your bot manually, you have to delete the program in heroku (under set
 
 # for developers
 
-## config
-* enable inline queries `https://core.telegram.org/bots/inline`
-
 ## deployment
 * `gradle build`
 * `heroku deploy:jar build/libs/dit-calendar-bot-*-all.jar --app dit-calendar`

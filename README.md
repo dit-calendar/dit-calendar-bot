@@ -1,4 +1,4 @@
-# dit-calendar-bot [![Build Status](https://travis-ci.org/dit-calendar/dit-calendar-bot.svg?branch=master)](https://travis-ci.org/dit-calendar/dit-calendar-bot)
+# dit-calendar-bot [![Build Status](https://travis-ci.com/dit-calendar/dit-calendar-bot.svg?branch=master)](https://travis-ci.com/dit-calendar/dit-calendar-bot)
 
 This is a tool for (collective) participatory/collaborative projects. A calendar with tasks for self-administration of work for groups. The main goal for this tool is to provide a calendar for events, create tasks for an event and allow a user-task assignment via [telegram](https://telegram.org/).
 
